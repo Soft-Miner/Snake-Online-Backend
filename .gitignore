@@ -1,0 +1,14 @@
+.vscode/
+node_modules/
+dist/
+
+tmp/
+
+coverage/
+
+src/database/test/database.test.sqlite
+src/database/database.local.sqlite
+
+.env
+.env.development
+.env.production
