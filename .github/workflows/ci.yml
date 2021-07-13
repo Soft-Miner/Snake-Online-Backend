@@ -27,8 +27,3 @@ jobs:
 
       - name: Build
         run: npx tsc
-
-      - name: Discord Notification
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@master
