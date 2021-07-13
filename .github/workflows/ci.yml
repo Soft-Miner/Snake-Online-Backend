@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  pull_request:
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2.1.0
+
+      - name: Install Dependencies
+        run: yarn
+
+      - name: Jest
+        run: yarn test
+
+      - name: Prettier
+        run: yarn prettier:check
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Build
+        run: npx tsc
+
+      - name: Discord Notification
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
+        uses: Ilshidur/action-discord@master

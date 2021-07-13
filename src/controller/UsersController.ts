@@ -32,7 +32,7 @@ class UsersController {
         email
       );
       return response.status(201).json({
-        message: 'User successfuly created.',
+        message: 'User successfully created.',
         user: {
           id: user.id,
           nickname: user.nickname,
