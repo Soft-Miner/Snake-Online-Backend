@@ -60,7 +60,7 @@ class SendMailService {
       to,
       subject,
       html,
-      from: 'minihabitos@gmail.com',
+      from: 'rodrigo_gonn@hotmail.com',
     });
 
     if (!isProduction) {
