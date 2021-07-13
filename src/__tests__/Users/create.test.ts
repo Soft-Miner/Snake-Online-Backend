@@ -1,21 +1,29 @@
-import request from 'supertest';
+import { Server } from 'http';
+import request, { SuperAgentTest } from 'supertest';
 import { createConnection } from 'typeorm';
 import app from '../../app';
-import PopulateDatabase from '../populateDatabase';
 
-describe('Create new users', () => {
-  beforeAll(async () => {
+let server: Server, agent: SuperAgentTest;
+
+describe('Create new user', () => {
+  beforeAll(async (done) => {
     const connection = await createConnection();
     await connection.dropDatabase();
     await connection.runMigrations();
-    await PopulateDatabase(connection);
+
+    server = app.listen(0, async () => {
+      agent = request.agent(server);
+
+      done();
+    });
   });
-  beforeEach(() => {
-    jest.clearAllMocks();
+
+  afterAll((done) => {
+    return server && server.close(done);
   });
 
   it('should be possible to create a new user', async () => {
-    const response = await request(app).post('/api/register').send({
+    const response = await agent.post('/api/register').send({
       nickname: 'Vitor',
       email: 'email@example.com',
       password: '123',
@@ -29,13 +37,13 @@ describe('Create new users', () => {
   });
 
   it('should return error if params is incorret', async () => {
-    const response = await request(app).post('/api/register').send({
+    const response = await agent.post('/api/register').send({
       nickname: 'Vitor',
       email: 'email@example.com',
       password: '',
     });
 
-    const responseEmailInvalid = await request(app).post('/api/register').send({
+    const responseEmailInvalid = await agent.post('/api/register').send({
       nickname: 'Vitor',
       email: 'lolpellolDotcom',
       password: '123',
@@ -50,21 +58,17 @@ describe('Create new users', () => {
   });
 
   it('should return error if user already exists', async () => {
-    const responseWithSameEmail = await request(app)
-      .post('/api/register')
-      .send({
-        nickname: 'llpo',
-        email: 'test@test.com',
-        password: '123',
-      });
+    const responseWithSameEmail = await agent.post('/api/register').send({
+      nickname: 'llpo',
+      email: 'email@example.com',
+      password: '123',
+    });
 
-    const responseWithSameNickname = await request(app)
-      .post('/api/register')
-      .send({
-        nickname: 'test',
-        email: 'test@test2.com',
-        password: '123',
-      });
+    const responseWithSameNickname = await agent.post('/api/register').send({
+      nickname: 'Vitor',
+      email: 'test@test2.com',
+      password: '123',
+    });
 
     expect(responseWithSameEmail.status).toBe(400);
     expect(responseWithSameEmail.body.message).toBe(

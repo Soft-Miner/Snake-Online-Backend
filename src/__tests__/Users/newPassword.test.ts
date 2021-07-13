@@ -1,19 +1,16 @@
 import app from '../../app';
-import request from 'supertest';
+import request, { SuperAgentTest } from 'supertest';
+import { Server } from 'http';
 import { Connection, createConnection } from 'typeorm';
 import PasswordResetRequest from '../../models/PasswordResetRequest';
-import User from '../../models/User';
+import createUser from '../utils/createUser';
+
+let server: Server, agent: SuperAgentTest;
 
 let requestId: string;
 
 const populateDatabase = async (connection: Connection) => {
-  const usersRepository = connection.getRepository(User);
-  const user = usersRepository.create({
-    email: 'test@test.com',
-    nickname: 'test',
-    password: '123',
-  });
-  await usersRepository.save(user);
+  const { user } = await createUser(connection);
 
   const resetRequestsRepository =
     connection.getRepository(PasswordResetRequest);
@@ -27,29 +24,40 @@ const populateDatabase = async (connection: Connection) => {
 };
 
 describe('New password', () => {
-  beforeAll(async () => {
+  beforeAll(async (done) => {
     const connection = await createConnection();
     await connection.dropDatabase();
     await connection.runMigrations();
-    await populateDatabase(connection);
+
+    server = app.listen(0, async () => {
+      agent = request.agent(server);
+
+      await populateDatabase(connection);
+
+      done();
+    });
+  });
+
+  afterAll((done) => {
+    return server && server.close(done);
   });
 
   it('should return error if some sent data is empty', async () => {
-    const responseWithoutRequestId = await request(app)
+    const responseWithoutRequestId = await agent
       .post('/api/users/new-password')
       .send({
         requestId: '',
         requestSecret: 'asd5ad4s',
         password: '12345',
       });
-    const responseWithoutSecret = await request(app)
+    const responseWithoutSecret = await agent
       .post('/api/users/new-password')
       .send({
         requestId: '54asd6as54d',
         requestSecret: '',
         password: '12345',
       });
-    const responseWithoutPassword = await request(app)
+    const responseWithoutPassword = await agent
       .post('/api/users/new-password')
       .send({
         requestId: '54asd6as54d',
@@ -71,7 +79,7 @@ describe('New password', () => {
   });
 
   it('should return error if requestId not found', async () => {
-    const response = await request(app).post('/api/users/new-password').send({
+    const response = await agent.post('/api/users/new-password').send({
       requestId: '54asd6as5d',
       requestSecret: 'asd5ad4s',
       password: '5151',
@@ -81,7 +89,7 @@ describe('New password', () => {
   });
 
   it('should return error if requestSecret is invalid', async () => {
-    const response = await request(app).post('/api/users/new-password').send({
+    const response = await agent.post('/api/users/new-password').send({
       requestId,
       requestSecret: '0123',
       password: '1234',
@@ -91,7 +99,7 @@ describe('New password', () => {
   });
 
   it('should be possible to change the password', async () => {
-    const response = await request(app).post('/api/users/new-password').send({
+    const response = await agent.post('/api/users/new-password').send({
       requestId,
       requestSecret: '123',
       password: '1234',

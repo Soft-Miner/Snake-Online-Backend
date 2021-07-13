@@ -1,40 +1,19 @@
 import app from '../../app';
 import { Server } from 'http';
 import request, { SuperAgentTest } from 'supertest';
-import { Connection, createConnection } from 'typeorm';
-import User from '../../models/User';
+import { createConnection } from 'typeorm';
 import jwt from 'jsonwebtoken';
+import createUser from '../utils/createUser';
 
 let server: Server, agent: SuperAgentTest;
 let token: string;
-let tokenOfNonExistentUser: string;
-
-const getToken = async (connection: Connection) => {
-  const usersRepository = connection.getRepository(User);
-
-  const user = usersRepository.create({
-    email: 'test@test.com',
-    nickname: 'test',
-    password: '$2b$10$7TOQbrdLq0tUuKgJQjQLd.mn4njjf808A1ojy5uupUABgnZPcW1TG',
-  });
-
-  await usersRepository.save(user);
-
-  const response = await agent.post('/api/authenticate').send({
-    login: 'test@test.com',
-    password: '123',
-  });
-
-  token = response.body.access_token;
-
-  tokenOfNonExistentUser = jwt.sign(
-    {
-      id: 'some-id',
-      typ: 'access',
-    },
-    process.env.JWT_SECRET as string
-  );
-};
+const tokenOfNonExistentUser = jwt.sign(
+  {
+    id: 'some-id',
+    typ: 'access',
+  },
+  process.env.JWT_SECRET as string
+);
 
 describe('Update password', () => {
   beforeAll(async (done) => {
@@ -45,7 +24,8 @@ describe('Update password', () => {
     server = app.listen(0, async () => {
       agent = request.agent(server);
 
-      await getToken(connection);
+      const { access_token } = await createUser(connection);
+      token = access_token;
 
       done();
     });
