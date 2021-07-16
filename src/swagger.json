@@ -2,20 +2,23 @@
   "openapi": "3.0.0",
   "info": {
     "version": "1.0.0",
-    "title": "Snake Online",
-    "description": "Come geral para ganhar pontos"
+    "title": "Snake Online"
   },
   "servers": [
     {
       "url": "http://localhost:3333",
-      "description": "API de test"
+      "description": "Local"
+    },
+    {
+      "url": "https://snake-online-dev.herokuapp.com",
+      "description": "Dev"
     }
   ],
   "paths": {
+
     "/api/register": {
       "post": {
         "summary": "Registro de usuários",
-        "description": "Essa rota será responsável por cadastrar novos usuários.",
 
         "requestBody": {
           "content": {
@@ -81,8 +84,8 @@
     },
     "/api/request-new-password": {
       "post": {
-        "summary": "Pedido de alteração de senha",
-        "description": "Essa rota será usada pelo usuário para requisitar uma nova senha.",
+        "summary": "Esqueci minha senha",
+        "description": "Envia um email para o usuário poder alterar sua senha.",
 
         "requestBody": {
           "content": {
@@ -143,8 +146,8 @@
     },
     "/api/users/new-password": {
       "post": {
-        "summary": "Altera a senha do usuário",
-        "description": "Essa rota será usada alteração da senha do usuário.",
+        "summary": "Recuperar a senha",
+        "description": "Alterar a senha a partir do requestId e requestSecret obtido no email de esqueci minha senha.",
 
         "requestBody": {
           "content": {
@@ -222,8 +225,7 @@
     "/api/users/change-password": {
       "put": {
         "security": [{ "bearerAuth": [] }],
-        "summary": "Atualiza a senha do usuário",
-        "description": "Essa rota será usada para a atualização da senha do usuário.",
+        "summary": "Atualiza a senha",
 
         "requestBody": {
           "content": {
@@ -299,8 +301,7 @@
     },
     "/api/authenticate": {
       "post": {
-        "summary": "Retorna access_token, refresh_token e user",
-        "description": "Essa rota será usada para a autentificação do usuário.",
+        "summary": "Login",
 
         "requestBody": {
           "content": {
@@ -354,8 +355,7 @@
     },
     "/api/refresh_token": {
       "post": {
-        "summary": "Retorna um novo access_token e refresh_token a partir de um refresh_token",
-        "description": "Essa rota será usada para a pegar novos tokens válidos.",
+        "summary": "Refresh Token",
 
         "requestBody": {
           "content": {

@@ -19,6 +19,7 @@ describe('Auth', () => {
       await createUser(connection, {
         nickname: 'Oosasukel',
         email: 'rodrigo_gonn@hotmail.com',
+        password: '123',
       } as User);
 
       done();

@@ -1,27 +1,13 @@
-import app from '../../app';
-import request, { SuperAgentTest } from 'supertest';
 import { Server } from 'http';
-import { Connection, createConnection } from 'typeorm';
-import PasswordResetRequest from '../../models/PasswordResetRequest';
-import createUser from '../utils/createUser';
+import request, { SuperAgentTest } from 'supertest';
+import { createConnection } from 'typeorm';
+import app from '../../app';
+import createResetRequest from '../utils/createResetRequest';
 
 let server: Server, agent: SuperAgentTest;
 
 let requestId: string;
-
-const populateDatabase = async (connection: Connection) => {
-  const { user } = await createUser(connection);
-
-  const resetRequestsRepository =
-    connection.getRepository(PasswordResetRequest);
-  const resetRequest = resetRequestsRepository.create({
-    request_secret:
-      '$2b$10$7TOQbrdLq0tUuKgJQjQLd.mn4njjf808A1ojy5uupUABgnZPcW1TG',
-    user_id: user.id,
-  });
-  await resetRequestsRepository.save(resetRequest);
-  requestId = resetRequest.id;
-};
+let requestSecret: string;
 
 describe('New password', () => {
   beforeAll(async (done) => {
@@ -32,7 +18,10 @@ describe('New password', () => {
     server = app.listen(0, async () => {
       agent = request.agent(server);
 
-      await populateDatabase(connection);
+      const resetRequest = await createResetRequest(connection);
+
+      requestId = resetRequest.requestId;
+      requestSecret = resetRequest.request_secret;
 
       done();
     });
@@ -81,7 +70,7 @@ describe('New password', () => {
   it('should return error if requestId not found', async () => {
     const response = await agent.post('/api/users/new-password').send({
       requestId: '54asd6as5d',
-      requestSecret: 'asd5ad4s',
+      requestSecret,
       password: '5151',
     });
     expect(response.status).toBe(404);
@@ -101,7 +90,7 @@ describe('New password', () => {
   it('should be possible to change the password', async () => {
     const response = await agent.post('/api/users/new-password').send({
       requestId,
-      requestSecret: '123',
+      requestSecret,
       password: '1234',
     });
 

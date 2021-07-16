@@ -7,13 +7,13 @@ const createUser = async (connection: Connection, user?: User) => {
   const newUser = usersRepository.create({
     nickname: user?.nickname || 'nickname',
     email: user?.email || 'email@example.com',
-    password: '$2b$10$7TOQbrdLq0tUuKgJQjQLd.mn4njjf808A1ojy5uupUABgnZPcW1TG',
+    password: user?.password || '123',
   });
   const userSaved = await usersRepository.save(newUser);
 
   const authenticateResponse = await new AuthenticateService().authenticate(
     userSaved.email as string,
-    '123'
+    user?.password || '123'
   );
 
   return authenticateResponse;
