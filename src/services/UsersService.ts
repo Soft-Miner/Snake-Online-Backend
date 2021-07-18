@@ -37,6 +37,7 @@ class UsersService {
       nickname,
       password: passwordHash,
       email,
+      points: 0,
     });
 
     await this.repository.save(user);
