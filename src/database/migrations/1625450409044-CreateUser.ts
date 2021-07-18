@@ -32,7 +32,7 @@ export class CreateUser1625450409044 implements MigrationInterface {
             isNullable: true,
           },
           {
-            type: 'number',
+            type: 'int',
             name: 'points',
           },
           {
