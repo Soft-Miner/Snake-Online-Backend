@@ -1,0 +1,414 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Snake Online"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3333",
+      "description": "Local"
+    },
+    {
+      "url": "https://snake-online-dev.herokuapp.com",
+      "description": "Dev"
+    }
+  ],
+  "paths": {
+
+    "/api/register": {
+      "post": {
+        "summary": "Registro de usuários",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "nickname": "Oosasukel",
+                  "email": "email@example.com",
+                  "password": "123"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "BAD REQUEST",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "ErrorResponseOne": {
+                    "value": {
+                      "message": "Something wrong with the request."
+                    }
+                  },
+                  "ErrorResponseTwo": {
+                    "value": {
+                      "message": "A user already exists with this email."
+                    }
+                  },
+                  "ErrorResponseTree": {
+                    "value": {
+                      "message": "A user already exists with this nickname."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "CREATED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "SuccessResponseOne": {
+                    "value": {
+                      "message": "User successfully created.",
+                      "user": [
+                        {
+                          "id": "uuid random",
+                          "nickname": "xxXmorriXxx",
+                          "email": "mailxample@hello.com"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/request-new-password": {
+      "post": {
+        "summary": "Esqueci minha senha",
+        "description": "Envia um email para o usuário poder alterar sua senha.",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "email": "email@example.com"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "BAD REQUEST",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "Invalid email."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT FOUND",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "User not found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "201": {
+            "description": "CREATED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "message": "Password recovery email sent to email@example.com."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/new-password": {
+      "post": {
+        "summary": "Recuperar a senha",
+        "description": "Alterar a senha a partir do requestId e requestSecret obtido no email de esqueci minha senha.",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "requestId": "335b53SD3-e7a0-435b-b44c-b868f126xA3eb4",
+                  "requestSecret": "335b5e73-e7a0-435b-b44c-b868f1123eb4",
+                  "password": "1234"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "BAD REQUEST",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "requestId, requestSecret and password are required."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "Invalid requestSecret."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT FOUND",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "User not found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "message": "Password successfully updated."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/change-password": {
+      "put": {
+        "security": [{ "bearerAuth": [] }],
+        "summary": "Atualiza a senha",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "password": "1234",
+                  "new_password": "12345"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "400": {
+            "description": "BAD REQUEST",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "Something wrong with the request."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "Password is incorrect."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT FOUND",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "User not found."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "message": "Password updated."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/authenticate": {
+      "post": {
+        "summary": "Login",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "login": "Oosasukel",
+                  "password": "12345"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "Nickname/email or password is incorrect."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE0YzQzZWJlLWQyNGQtNDU5ZS1iNjEzLTY1OTA5ZTlkNjdhNCIsInR5cCI6ImFjY2VzcyIsImlhdCI6MTYyNjEzNTUzNiwiZXhwIjoxNjI2MTM1ODM2LCJqdGkiOiI2YTM3MmI2Mi02OWY0LTQwNzctYTQyMC01ZmYwYzBjY2JjYzQifQ.DkeK0p8a-Rvkb117bVSWf62I5n-1pVk8rJ5ERkZIlkE",
+                      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE0YzQzZWJlLWQyNGQtNDU5ZS1iNjEzLTY1OTA5ZTlkNjdhNCIsInR5cCI6InJlZnJlc2giLCJpYXQiOjE2MjYxMzU1MzYsImV4cCI6MTYyNjEzNzMzNiwianRpIjoiNmFmZWZjNWYtOGNkYi00OTA2LThiNDQtN2M3NDA5MWY5ODg3In0.DJGP0ObB5PDIGLm7Or-oma57M_ZwbTx8-mbaGGfaG2I",
+                      "user": {
+                        "id": "a4c43ebe-d24d-459e-b613-65909e9d67a4",
+                        "nickname": "test",
+                        "email": "test@test.com"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/refresh_token": {
+      "post": {
+        "summary": "Refresh Token",
+
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "example": {
+                  "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE0YzQzZWJlLWQyNGQtNDU5ZS1iNjEzLTY1OTA5ZTlkNjdhNCIsInR5cCI6InJlZnJlc2giLCJpYXQiOjE2MjYwMTY0MzQsImV4cCI6MTYyNjAxODIzNCwianRpIjoiYzIxMWNlNGMtYTU5Yi00OWMxLWIwYWYtYmNmMGNjZWE1YzM0In0.mG5rA7jbQyi3tc_DsTYMo_E2CYBVTEHlM2Ho1_Redv0"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "401": {
+            "description": "UNAUTHORIZED",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Error Response": {
+                    "value": {
+                      "message": "Nickname/email or password is incorrect."
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "examples": {
+                  "Success Response": {
+                    "value": {
+                      "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE0YzQzZWJlLWQyNGQtNDU5ZS1iNjEzLTY1OTA5ZTlkNjdhNCIsInR5cCI6ImFjY2VzcyIsImlhdCI6MTYyNjEzNTUzNiwiZXhwIjoxNjI2MTM1ODM2LCJqdGkiOiI2YTM3MmI2Mi02OWY0LTQwNzctYTQyMC01ZmYwYzBjY2JjYzQifQ.DkeK0p8a-Rvkb117bVSWf62I5n-1pVk8rJ5ERkZIlkE",
+                      "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImE0YzQzZWJlLWQyNGQtNDU5ZS1iNjEzLTY1OTA5ZTlkNjdhNCIsInR5cCI6InJlZnJlc2giLCJpYXQiOjE2MjYxMzU1MzYsImV4cCI6MTYyNjEzNzMzNiwianRpIjoiNmFmZWZjNWYtOGNkYi00OTA2LThiNDQtN2M3NDA5MWY5ODg3In0.DJGP0ObB5PDIGLm7Or-oma57M_ZwbTx8-mbaGGfaG2I"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    }
+  }
+}

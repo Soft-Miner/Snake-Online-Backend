@@ -1,12 +1,13 @@
-import { getRepository, Repository } from 'typeorm';
-import { AppError } from '../errors/AppError';
-import User from '../models/User';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import { getRepository, Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
+import { AppError } from '../errors/AppError';
+import User from '../models/User';
 
 interface RefreshToken {
   id: string;
+  jwtid: string;
 }
 
 class AuthenticateService {
@@ -14,6 +15,33 @@ class AuthenticateService {
 
   constructor() {
     this.repository = getRepository(User);
+  }
+
+  private generateAccessToken(userId: string) {
+    return jwt.sign(
+      {
+        id: userId,
+        typ: 'access',
+      },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: 60 * 5, // 5 minutes
+      }
+    );
+  }
+
+  private generateRefreshToken(userId: string, refreshTokenId: string) {
+    return jwt.sign(
+      {
+        id: userId,
+        typ: 'refresh',
+        jwtid: refreshTokenId,
+      },
+      process.env.JWT_SECRET as string,
+      {
+        expiresIn: 60 * 30, // 30 minutes
+      }
+    );
   }
 
   async authenticate(login: string, password: string) {
@@ -31,33 +59,12 @@ class AuthenticateService {
       throw new AppError('Nickname/email or password is incorrect.', 401);
     }
 
-    const access_token = jwt.sign(
-      {
-        id: user.id,
-        typ: 'access',
-      },
-      process.env.JWT_SECRET as string,
-      {
-        jwtid: uuid(),
-        expiresIn: 60 * 5, // 5 minutes
-      }
-    );
+    const access_token = this.generateAccessToken(user.id);
 
-    const refresh_token = jwt.sign(
-      {
-        id: user.id,
-        typ: 'refresh',
-      },
-      process.env.JWT_SECRET as string,
-      {
-        jwtid: uuid(),
-        expiresIn: 60 * 30, // 30 minutes
-      }
-    );
+    const refreshTokenId = uuid();
+    const refresh_token = this.generateRefreshToken(user.id, refreshTokenId);
 
-    const refresh_token_hash = await bcrypt.hash(refresh_token, 10);
-
-    user.refresh_token = refresh_token_hash;
+    user.refresh_token = refreshTokenId;
 
     await this.repository.save(user);
 
@@ -86,42 +93,19 @@ class AuthenticateService {
       throw new AppError('Invalid refresh_token.');
     }
 
-    const refreshTokenIsValid = await bcrypt.compare(
-      refresh_token,
-      user.refresh_token as string
-    );
-
-    if (!refreshTokenIsValid) {
+    if (user.refresh_token !== decodedToken.jwtid) {
       throw new AppError('Invalid refresh_token.');
     }
 
-    const access_token = jwt.sign(
-      {
-        id: user.id,
-        typ: 'access',
-      },
-      process.env.JWT_SECRET as string,
-      {
-        jwtid: uuid(),
-        expiresIn: 60 * 5, // 5 minutes
-      }
+    const access_token = this.generateAccessToken(user.id);
+
+    const refreshTokenId = uuid();
+    const new_refresh_token = this.generateRefreshToken(
+      user.id,
+      refreshTokenId
     );
 
-    const new_refresh_token = jwt.sign(
-      {
-        id: user.id,
-        typ: 'refresh',
-      },
-      process.env.JWT_SECRET as string,
-      {
-        jwtid: uuid(),
-        expiresIn: 60 * 30, // 30 minutes
-      }
-    );
-
-    const refresh_token_hash = await bcrypt.hash(new_refresh_token, 10);
-
-    user.refresh_token = refresh_token_hash;
+    user.refresh_token = refreshTokenId;
 
     await this.repository.save(user);
 

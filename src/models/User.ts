@@ -21,8 +21,8 @@ class User {
   @Column()
   password: string;
 
-  @Column({ type: 'varchar' })
-  points: string | null;
+  @Column()
+  points: number;
 
   @Column({ type: 'varchar' })
   refresh_token: string | null;

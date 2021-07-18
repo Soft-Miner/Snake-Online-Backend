@@ -30,19 +30,25 @@ class SendMailService {
   }
 
   async execute({ to, subject, variables, path }: SendEmailParams) {
-    await createTestAccount().then((account) => {
-      const transporter = createTransport({
-        host: account.smtp.host,
-        port: account.smtp.port,
-        secure: account.smtp.secure,
-        auth: {
-          user: account.user,
-          pass: account.pass,
-        },
-      });
+    const isProduction = !['development', 'test'].includes(
+      process.env.NODE_ENV as string
+    );
 
-      this.client = transporter;
-    });
+    if (!isProduction) {
+      await createTestAccount().then((account) => {
+        const transporter = createTransport({
+          host: account.smtp.host,
+          port: account.smtp.port,
+          secure: account.smtp.secure,
+          auth: {
+            user: account.user,
+            pass: account.pass,
+          },
+        });
+
+        this.client = transporter;
+      });
+    }
 
     const templateFileContent = fs.readFileSync(path).toString('utf-8');
 
@@ -54,10 +60,12 @@ class SendMailService {
       to,
       subject,
       html,
-      from: 'minihabitos@gmail.com',
+      from: 'rodrigo_gonn@hotmail.com',
     });
 
-    console.log('Message sent. Preview URL: %s', getTestMessageUrl(message));
+    if (!isProduction) {
+      console.log('Message sent. Preview URL: %s', getTestMessageUrl(message));
+    }
   }
 }
 
