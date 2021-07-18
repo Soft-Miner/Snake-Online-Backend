@@ -2,7 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { AppError } from '../errors/AppError';
 
-interface tokenPayload {
+export interface tokenPayload {
   id: string;
   typ: string;
 }

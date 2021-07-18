@@ -32,9 +32,8 @@ export class CreateUser1625450409044 implements MigrationInterface {
             isNullable: true,
           },
           {
-            type: 'varchar',
+            type: 'number',
             name: 'points',
-            isNullable: true,
           },
           {
             name: 'last_modified',
