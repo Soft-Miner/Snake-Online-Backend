@@ -36,6 +36,7 @@ describe('User refreshToken', () => {
       refresh_token,
     });
 
+    expect(response.body.message).toBe(' ');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('access_token');
     expect(response.body).toHaveProperty('refresh_token');

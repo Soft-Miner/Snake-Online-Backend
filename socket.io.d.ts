@@ -1,12 +1,8 @@
 import 'socket.io';
+import { User } from './src/io/types/User';
 
 declare module 'socket.io' {
   export interface Socket {
-    user: {
-      id: string;
-      nickname: string;
-      email: string;
-      points: number;
-    };
+    user: User;
   }
 }

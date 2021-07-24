@@ -1,11 +1,11 @@
-import { getManager, getRepository, Repository } from 'typeorm';
-import User from '../models/User';
-import { AppError } from '../errors/AppError';
 import bcrypt from 'bcrypt';
-import { v4 as uuid } from 'uuid';
-import PasswordResetRequest from '../models/PasswordResetRequest';
-import SendMailService from './SendMailService';
 import { resolve } from 'path';
+import { getManager, getRepository, Repository } from 'typeorm';
+import { v4 as uuid } from 'uuid';
+import { AppError } from '../errors/AppError';
+import PasswordResetRequest from '../models/PasswordResetRequest';
+import User from '../models/User';
+import SendMailService from './SendMailService';
 
 class UsersService {
   private repository: Repository<User>;
