@@ -35,6 +35,7 @@ class AuthenticateController {
           id: user.id,
           nickname: user.nickname,
           email: user.email,
+          points: user.points,
         },
       });
     } catch (error) {

@@ -66,12 +66,15 @@ class AuthenticateService {
 
     user.refresh_token = refreshTokenId;
 
+    const points = user.points;
+
     await this.repository.save(user);
 
     return {
       access_token,
       refresh_token,
       user,
+      points,
     };
   }
 
