@@ -342,7 +342,7 @@
                         "id": "a4c43ebe-d24d-459e-b613-65909e9d67a4",
                         "nickname": "test",
                         "email": "test@test.com",
-                        "points": "0"
+                        "points": 0 
                       }
                     }
                   }
