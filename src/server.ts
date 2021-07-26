@@ -5,9 +5,9 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 import { createConnection } from 'typeorm';
-createConnection();
-
 import app from './app';
+
+createConnection();
 
 const PORT = process.env.PORT || 3333;
 

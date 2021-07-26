@@ -2,9 +2,9 @@ import jwt from 'jsonwebtoken';
 import { Socket } from 'socket.io';
 import { ExtendedError } from 'socket.io/dist/namespace';
 import { getRepository } from 'typeorm';
-import User from '../../models/User';
-import { User as SocketUser } from '../types/User';
 import { tokenPayload } from '../../middlewares/verifyJWT';
+import User from '../../models/User';
+import { User as SocketUser } from '../store/users/types';
 
 export const verifyJWT = (
   socket: Socket,
