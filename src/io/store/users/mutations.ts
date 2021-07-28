@@ -1,22 +1,40 @@
+import { Socket } from 'socket.io';
+import store from '..';
 import { State } from '../types';
 
-interface MutationAddUser {
-  name: string;
+interface LeaveGamePayload {
+  socket: Socket;
 }
-export const addUser = (state: State, payload: MutationAddUser) => {
-  state.users.push({
-    id: '123',
-    email: 'a',
-    nickname: payload.name,
-    points: 0,
-  });
+export const leaveGame = (state: State, payload: LeaveGamePayload) => {
+  const { socket } = payload;
+
+  const indexToRemove = store.state.users.findIndex(
+    (user) => user.id === socket.user.id
+  );
+
+  if (indexToRemove !== -1) {
+    store.state.users.splice(indexToRemove, 1);
+  }
+
+  socket.to('home').emit('users-updated', store.state.users.length);
+
   return state;
 };
 
-interface MutationClearUser {
-  index: number;
+interface EnterGamePayload {
+  socket: Socket;
 }
-export const clearUser = (state: State, payload: MutationClearUser) => {
-  state.users.splice(payload.index, 1);
+export const enterGame = (state: State, payload: EnterGamePayload) => {
+  const { socket } = payload;
+
+  console.log(`User connected: ${socket.user.nickname}`);
+  socket.join('home');
+
+  /** @TODO Tratar user já existente */
+
+  store.state.users.push(socket.user);
+
+  socket.to('home').emit('users-updated', store.state.users.length);
+
   return state;
 };

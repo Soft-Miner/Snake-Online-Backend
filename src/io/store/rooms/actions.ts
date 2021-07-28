@@ -1,15 +1,32 @@
+import { Server, Socket } from 'socket.io';
 import { Store } from '..';
 
-interface NewRoomPayload {
-  alo: string;
+interface CreateRoomPayload {
+  name: string;
+  socket: Socket;
 }
-export const newRoom = (context: Store, payload: NewRoomPayload) => {
-  context.commit({ key: 'addRoom', payload: { name: payload.alo } });
+export const createRoom = (context: Store, payload: CreateRoomPayload) => {
+  context.commit({ key: 'createRoom', payload });
 };
 
-interface UpdateRoomPayload {
-  galera: number;
+interface JoinRoomPayload {
+  id: string;
+  socket: Socket;
 }
-export const updateRoom = (context: Store, payload: UpdateRoomPayload) => {
-  context.commit({ key: 'clearRoom', payload: { index: payload.galera } });
+export const joinRoom = (context: Store, payload: JoinRoomPayload) => {
+  context.commit({ key: 'joinRoom', payload });
+};
+
+interface LeaveRoomPayload {
+  socket: Socket;
+  io: Server;
+}
+export const leaveRoom = (context: Store, payload: LeaveRoomPayload) => {
+  const { io, socket } = payload;
+  context.commit({ key: 'leaveRoom', payload });
+
+  socket.emit('left-room');
+  socket.join('home');
+  /** @TODO emitir somente o necessário */
+  io.to('home').emit('rooms-updated', context.state.rooms);
 };

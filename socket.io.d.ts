@@ -1,5 +1,5 @@
 import 'socket.io';
-import { User } from './src/io/types/User';
+import { User } from './src/io/store/users/types';
 
 declare module 'socket.io' {
   export interface Socket {
