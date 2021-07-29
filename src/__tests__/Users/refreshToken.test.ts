@@ -1,7 +1,7 @@
-import app from '../../app';
 import { Server } from 'http';
 import request, { SuperAgentTest } from 'supertest';
 import { createConnection, getRepository } from 'typeorm';
+import app from '../../app';
 import User from '../../models/User';
 import createUser from '../utils/createUser';
 
@@ -36,7 +36,6 @@ describe('User refreshToken', () => {
       refresh_token,
     });
 
-    expect(response.body.message).toBe(' ');
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('access_token');
     expect(response.body).toHaveProperty('refresh_token');

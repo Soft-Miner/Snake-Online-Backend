@@ -1,4 +1,4 @@
-import { Socket } from 'socket.io';
+import { Server, Socket } from 'socket.io';
 import { v4 as uuid } from 'uuid';
 import { State } from '../types';
 
@@ -12,7 +12,8 @@ export const createRoom = (state: State, payload: CreateRoomPayload) => {
   const roomExists = state.rooms.find((item) => item.name === name);
 
   if (roomExists) {
-    throw new Error('Room already exists.');
+    socket.emit('error', 'Room already exists.');
+    return state;
   }
 
   const newRoom = {
@@ -88,9 +89,10 @@ export const joinRoom = (state: State, payload: JoinRoomPayload) => {
 
 interface LeaveRoomPayload {
   socket: Socket;
+  io: Server;
 }
 export const leaveRoom = (state: State, payload: LeaveRoomPayload) => {
-  const { socket } = payload;
+  const { socket, io } = payload;
 
   for (const room of socket.rooms) {
     if (room !== socket.id) {
@@ -126,8 +128,13 @@ export const leaveRoom = (state: State, payload: LeaveRoomPayload) => {
       }
 
       socket.leave(room);
+      socket.emit('left-room');
     }
   }
+
+  socket.join('home');
+  /** @TODO emitir somente o necessário */
+  io.to('home').emit('rooms-updated', state.rooms);
 
   return state;
 };

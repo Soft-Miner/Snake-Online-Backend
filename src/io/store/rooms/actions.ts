@@ -22,11 +22,5 @@ interface LeaveRoomPayload {
   io: Server;
 }
 export const leaveRoom = (context: Store, payload: LeaveRoomPayload) => {
-  const { io, socket } = payload;
   context.commit({ key: 'leaveRoom', payload });
-
-  socket.emit('left-room');
-  socket.join('home');
-  /** @TODO emitir somente o necessário */
-  io.to('home').emit('rooms-updated', context.state.rooms);
 };

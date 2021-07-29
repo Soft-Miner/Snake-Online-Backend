@@ -13,16 +13,15 @@ export const configureSocketIo = (server: HttpServer) => {
   io.use(verifyJWT);
 
   io.on('connection', (socket) => {
-    /** @TODO tratar usuário já conectado */
-    store.dispatch({ type: 'enterGame', payload: { socket } });
+    store.dispatch({ type: 'enterGame', payload: { socket, io } });
 
     socket.on('message', chatListeners.message(socket));
     socket.on('create-room', roomsListeners.create(socket));
     socket.on('join-room', roomsListeners.join(socket));
     socket.on('leave-room', roomsListeners.leave(socket, io));
 
-    socket.on('disconnect', () => {
-      store.dispatch({ type: 'leaveGame', payload: { socket } });
+    socket.on('disconnecting', () => {
+      store.dispatch({ type: 'leaveGame', payload: { socket, io } });
     });
   });
 };
