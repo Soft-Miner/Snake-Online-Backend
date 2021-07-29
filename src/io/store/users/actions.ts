@@ -1,15 +1,19 @@
+import { Server, Socket } from 'socket.io';
 import { Store } from '..';
 
-interface NewUserPayload {
-  alo: string;
+interface LeaveGamePayload {
+  socket: Socket;
+  io: Server;
 }
-export const newUser = (context: Store, payload: NewUserPayload) => {
-  context.commit({ key: 'addRoom', payload: { name: payload.alo } });
+export const leaveGame = (context: Store, payload: LeaveGamePayload) => {
+  context.commit({ key: 'leaveRoom', payload });
+  context.commit({ key: 'leaveGame', payload });
 };
 
-interface UpdateRoomPayload {
-  galera: number;
+interface EnterGamePayload {
+  socket: Socket;
+  io: Server;
 }
-export const updateRoom = (context: Store, payload: UpdateRoomPayload) => {
-  context.commit({ key: 'clearRoom', payload: { index: payload.galera } });
+export const enterGame = (context: Store, payload: EnterGamePayload) => {
+  context.commit({ key: 'enterGame', payload });
 };

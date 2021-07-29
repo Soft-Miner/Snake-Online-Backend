@@ -50,16 +50,6 @@ class AuthenticateController {
   ) {
     const { refresh_token } = request.body;
 
-    const schema = yup.object().shape({
-      refresh_token: yup.string().required(),
-    });
-
-    try {
-      await schema.validate(request.body);
-    } catch (error) {
-      return _next(new AppError('Invalid refresh_token.'));
-    }
-
     try {
       const { access_token, refresh_token: new_refresh_token } =
         await new AuthenticateService().refreshToken(refresh_token);

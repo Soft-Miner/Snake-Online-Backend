@@ -4,6 +4,7 @@ import { ExtendedError } from 'socket.io/dist/namespace';
 import { getRepository } from 'typeorm';
 import { tokenPayload } from '../../middlewares/verifyJWT';
 import User from '../../models/User';
+import store from '../store';
 import { User as SocketUser } from '../store/users/types';
 
 export const verifyJWT = (
@@ -28,6 +29,14 @@ export const verifyJWT = (
 
         if (!user) {
           return next(new Error('User not found.'));
+        }
+
+        const userAlreadyConnected = store.state.users.find(
+          (item) => item.id === user.id
+        );
+
+        if (userAlreadyConnected) {
+          return next(new Error('User already connected.'));
         }
 
         socket.user = user as SocketUser;
