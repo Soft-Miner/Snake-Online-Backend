@@ -84,17 +84,17 @@ class AuthenticateService {
         process.env.JWT_SECRET as string
       ) as RefreshToken;
     } catch (error) {
-      throw new AppError('Invalid refresh_token.');
+      throw new AppError('Invalid refresh_token.', 401);
     }
 
     const user = await this.repository.findOne(decodedToken.id);
 
     if (!user) {
-      throw new AppError('Invalid refresh_token.');
+      throw new AppError('Invalid refresh_token.', 401);
     }
 
     if (user.refresh_token !== decodedToken.jwtid) {
-      throw new AppError('Invalid refresh_token.');
+      throw new AppError('Invalid refresh_token.', 401);
     }
 
     const access_token = this.generateAccessToken(user.id);

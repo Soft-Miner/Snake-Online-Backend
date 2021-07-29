@@ -376,7 +376,7 @@
                 "examples": {
                   "Error Response": {
                     "value": {
-                      "message": "Nickname/email or password is incorrect."
+                      "message": "Invalid refresh_token."
                     }
                   }
                 }
