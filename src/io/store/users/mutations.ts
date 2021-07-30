@@ -1,4 +1,5 @@
 import { Server, Socket } from 'socket.io';
+import { formatRoomsToHome } from '../rooms/utils/formatRoomsToHome';
 import { State } from '../types';
 
 interface LeaveGamePayload {
@@ -35,7 +36,7 @@ export const enterGame = (state: State, payload: EnterGamePayload) => {
   state.users.push(socket.user);
 
   io.to('home').emit('users-updated', state.users.length);
-  socket.emit('rooms-updated', state.rooms);
+  socket.emit('rooms-updated', formatRoomsToHome(state.rooms));
 
   return state;
 };

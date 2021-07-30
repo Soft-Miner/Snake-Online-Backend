@@ -39,7 +39,7 @@ export const verifyJWT = (
           return next(new Error('User already connected.'));
         }
 
-        socket.user = user as SocketUser;
+        socket.user = { ...user, socket } as SocketUser;
 
         next();
       }

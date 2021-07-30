@@ -1,6 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuid } from 'uuid';
 import { State } from '../types';
+import { Room } from './types';
+import { formatRoomsToHome } from './utils/formatRoomsToHome';
 
 interface CreateRoomPayload {
   name: string;
@@ -16,10 +18,18 @@ export const createRoom = (state: State, payload: CreateRoomPayload) => {
     return state;
   }
 
-  const newRoom = {
+  const newRoom: Room = {
     id: uuid(),
     name,
-    users: [{ ...socket.user, ready: false }],
+    users: [
+      {
+        email: socket.user.email,
+        id: socket.user.id,
+        nickname: socket.user.nickname,
+        points: socket.user.points,
+        ready: false,
+      },
+    ],
     owner: socket.user.id,
     mapSize: 12,
     game: null,
@@ -44,8 +54,8 @@ export const createRoom = (state: State, payload: CreateRoomPayload) => {
   socket.emit('room-successfuly-created', newRoom);
   socket.leave('home');
   socket.join(newRoom.id);
-  /** @TODO emitir somente o necessário */
-  socket.to('home').emit('rooms-updated', state.rooms);
+
+  socket.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
 
   return state;
 };
@@ -75,14 +85,25 @@ export const joinRoom = (state: State, payload: JoinRoomPayload) => {
   }
 
   room.slots.splice(slotOpenIndex, 1, socket.user.id);
-  room.users.push({ ...socket.user, ready: false });
+  room.users.push({
+    id: socket.user.id,
+    email: socket.user.email,
+    nickname: socket.user.nickname,
+    points: socket.user.points,
+    ready: false,
+  });
 
-  socket.leave('home');
+  for (const room of socket.rooms) {
+    if (room !== socket.id) {
+      socket.leave(room);
+    }
+  }
+
   socket.join(id);
   socket.emit('joined-room', room);
   socket.to(room.id).emit('new-user-joined-room', room);
-  /** @TODO emitir somente o necessário */
-  socket.to('home').emit('rooms-updated', state.rooms);
+
+  socket.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
 
   return state;
 };
@@ -133,8 +154,153 @@ export const leaveRoom = (state: State, payload: LeaveRoomPayload) => {
   }
 
   socket.join('home');
-  /** @TODO emitir somente o necessário */
-  io.to('home').emit('rooms-updated', state.rooms);
+  io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
+
+  return state;
+};
+
+interface KickPlayerPayload {
+  socket: Socket;
+  io: Server;
+  userId: string;
+}
+export const kickPlayer = (state: State, payload: KickPlayerPayload) => {
+  const { socket, io, userId } = payload;
+
+  for (const room of socket.rooms) {
+    if (socket.user.id === userId) break;
+
+    if (room !== socket.id) {
+      const currentRoom = state.rooms.find((item) => item.id === room);
+      if (!currentRoom) continue;
+      if (currentRoom.owner !== socket.user.id) continue;
+
+      const userIndex = currentRoom.users.findIndex(
+        (item) => item.id === userId
+      );
+      if (userIndex === -1) continue;
+
+      const userSlotIndex = currentRoom.slots.findIndex(
+        (item) => item === userId
+      );
+
+      currentRoom.slots.splice(userSlotIndex, 1, 'open');
+      currentRoom.users.splice(userIndex, 1);
+
+      const kickedUser = state.users.find((item) => item.id === userId);
+
+      if (kickedUser) {
+        io.to(kickedUser.socket.id).emit('left-room');
+        kickedUser.socket.join('home');
+      }
+
+      io.to(currentRoom.id).emit('user-left-room', currentRoom);
+    }
+  }
+
+  io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
+
+  return state;
+};
+
+interface OpenSlotPayload {
+  socket: Socket;
+  io: Server;
+  index: number;
+}
+export const openSlot = (state: State, payload: OpenSlotPayload) => {
+  const { socket, io, index } = payload;
+
+  for (const room of socket.rooms) {
+    if (room !== socket.id) {
+      const currentRoom = state.rooms.find((item) => item.id === room);
+      if (!currentRoom) continue;
+      if (currentRoom.owner !== socket.user.id) continue;
+      if (!currentRoom.slots[index] || currentRoom.slots[index] !== 'closed')
+        continue;
+
+      currentRoom.slots[index] = 'open';
+
+      io.to(room).emit('slot-updated', index, 'open');
+    }
+  }
+
+  io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
+
+  return state;
+};
+
+interface CloseSlotPayload {
+  socket: Socket;
+  io: Server;
+  index: number;
+}
+export const closeSlot = (state: State, payload: CloseSlotPayload) => {
+  const { socket, io, index } = payload;
+
+  for (const room of socket.rooms) {
+    if (room !== socket.id) {
+      const currentRoom = state.rooms.find((item) => item.id === room);
+      if (!currentRoom) continue;
+      if (currentRoom.owner !== socket.user.id) continue;
+      if (!currentRoom.slots[index] || currentRoom.slots[index] === 'closed')
+        continue;
+
+      currentRoom.slots[index] = 'closed';
+
+      io.to(room).emit('slot-updated', index, 'closed');
+    }
+  }
+
+  io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
+
+  return state;
+};
+
+interface GameReadyPayload {
+  socket: Socket;
+  io: Server;
+  ready: boolean;
+}
+export const gameReady = (state: State, payload: GameReadyPayload) => {
+  const { socket, io, ready } = payload;
+
+  for (const room of socket.rooms) {
+    if (room !== socket.id) {
+      const currentRoom = state.rooms.find((item) => item.id === room);
+      if (!currentRoom) continue;
+
+      const isOwner = currentRoom.owner === socket.user.id;
+
+      if (isOwner && !ready) continue;
+
+      if (isOwner) {
+        const allPlayersAccepted =
+          currentRoom.users.filter(
+            (user) => !user.ready && user.id !== socket.user.id
+          ).length === 0;
+
+        if (!allPlayersAccepted) {
+          socket.emit('error', 'All players need accept.');
+          continue;
+        }
+
+        io.to(room).emit('game-started', currentRoom);
+
+        io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
+      } else {
+        const userToUpdate = currentRoom.users.find(
+          (item) => item.id === socket.user.id
+        );
+
+        if (!userToUpdate) continue;
+
+        userToUpdate.ready = ready;
+
+        io.to(room).emit('room-user-changed', currentRoom);
+      }
+    }
+  }
 
   return state;
 };
