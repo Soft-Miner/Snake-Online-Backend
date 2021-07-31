@@ -6,6 +6,7 @@ interface HomeRoom {
   maxUsers: number;
   currentUsers: number;
   playing: boolean;
+  mapSize: number;
 }
 
 export const formatRoomsToHome = (rooms: Room[]): HomeRoom[] => {
@@ -20,6 +21,7 @@ export const formatRoomsToHome = (rooms: Room[]): HomeRoom[] => {
       currentUsers,
       maxUsers,
       playing,
+      mapSize: room.mapSize,
     };
   });
 };

@@ -5,3 +5,4 @@ export * from './join';
 export * from './kick';
 export * from './leave';
 export * from './openSlot';
+export * from './updateConfig';

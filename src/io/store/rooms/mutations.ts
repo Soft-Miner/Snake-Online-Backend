@@ -1,7 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuid } from 'uuid';
 import { State } from '../types';
-import { Room } from './types';
+import { Game, Room } from './types';
 import { formatRoomsToHome } from './utils/formatRoomsToHome';
 
 interface CreateRoomPayload {
@@ -127,7 +127,10 @@ export const leaveRoom = (state: State, payload: LeaveRoomPayload) => {
             const anotherUser = roomToLeave.users.find(
               (item) => item.id !== socket.user.id
             );
-            roomToLeave.owner = anotherUser?.id as string;
+            if (anotherUser) {
+              roomToLeave.owner = anotherUser.id as string;
+              anotherUser.ready = false;
+            }
           }
 
           const userSlotIndex = roomToLeave.slots.findIndex(
@@ -269,6 +272,7 @@ export const gameReady = (state: State, payload: GameReadyPayload) => {
     if (room !== socket.id) {
       const currentRoom = state.rooms.find((item) => item.id === room);
       if (!currentRoom) continue;
+      if (currentRoom.game) continue;
 
       const isOwner = currentRoom.owner === socket.user.id;
 
@@ -285,8 +289,24 @@ export const gameReady = (state: State, payload: GameReadyPayload) => {
           continue;
         }
 
-        io.to(room).emit('game-started', currentRoom);
+        /** @TODO Colocar games no state */
+        const newGame: Game = {
+          id: uuid(),
+          roomId: currentRoom.id,
+          fruits: [{ x: 2, y: 2 }],
+          mapSize: currentRoom.mapSize,
+          users: currentRoom.users.map((user) => ({
+            id: user.id,
+            gamePoints: 1,
+            body: [],
+            head: { x: 5, y: 5 },
+            direction: { x: 1, y: 0 },
+          })),
+        };
 
+        currentRoom.game = newGame.id;
+
+        io.to(room).emit('game-started', newGame);
         io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
       } else {
         const userToUpdate = currentRoom.users.find(
@@ -299,6 +319,38 @@ export const gameReady = (state: State, payload: GameReadyPayload) => {
 
         io.to(room).emit('room-user-changed', currentRoom);
       }
+    }
+  }
+
+  return state;
+};
+
+interface UpdateConfigPayload {
+  socket: Socket;
+  io: Server;
+  config: {
+    size: number;
+  };
+}
+export const updateConfig = (state: State, payload: UpdateConfigPayload) => {
+  const {
+    socket,
+    io,
+    config: { size },
+  } = payload;
+
+  for (const room of socket.rooms) {
+    if (room !== socket.id) {
+      const currentRoom = state.rooms.find((item) => item.id === room);
+      if (!currentRoom) continue;
+
+      const isOwner = currentRoom.owner === socket.user.id;
+      if (!isOwner) continue;
+
+      currentRoom.mapSize = size;
+
+      io.to(room).emit('room:config-updated', currentRoom);
+      io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
     }
   }
 

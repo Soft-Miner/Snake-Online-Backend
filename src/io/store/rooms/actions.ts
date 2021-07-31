@@ -59,3 +59,14 @@ interface GameReadyPayload {
 export const gameReady = (context: Store, payload: GameReadyPayload) => {
   context.commit({ key: 'gameReady', payload });
 };
+
+interface UpdateConfigPayload {
+  socket: Socket;
+  io: Server;
+  config: {
+    size: number;
+  };
+}
+export const updateConfig = (context: Store, payload: UpdateConfigPayload) => {
+  context.commit({ key: 'updateConfig', payload });
+};
