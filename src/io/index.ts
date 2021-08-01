@@ -1,6 +1,7 @@
 import { Server as HttpServer } from 'http';
 import { Server } from 'socket.io';
 import * as chatListeners from './listeners/chat';
+import * as gamesListeners from './listeners/games';
 import * as roomsListeners from './listeners/rooms';
 import { verifyJWT } from './middlewares/verifyJWT';
 import store from './store';
@@ -24,6 +25,7 @@ export const configureSocketIo = (server: HttpServer) => {
     socket.on('room:close-slot', roomsListeners.closeSlot(socket, io));
     socket.on('room:update-ready', roomsListeners.gameReady(socket, io));
     socket.on('room:update-config', roomsListeners.updateConfig(socket, io));
+    socket.on('game:change-direction', gamesListeners.changeDirection(socket));
 
     socket.on('disconnecting', () => {
       store.dispatch({ type: 'leaveGame', payload: { socket, io } });

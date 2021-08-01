@@ -5,7 +5,7 @@ export interface Room {
   users: RoomUser[];
   slots: string[] /* 'closed' | 'open' | userId */;
   mapSize: number;
-  game: string | null;
+  playing: boolean;
 }
 
 export interface RoomUser {
@@ -15,31 +15,3 @@ export interface RoomUser {
   points: number;
   ready: boolean;
 }
-
-export interface Game {
-  roomId: string;
-  id: string;
-  mapSize: number;
-  users: Array<{
-    id: string;
-    gamePoints: number;
-    body: Array<{
-      x: number;
-      y: number;
-    }>;
-    head: {
-      x: number;
-      y: number;
-    };
-    direction: up | down | left | right;
-  }>;
-  fruits: Array<{
-    x: number;
-    y: number;
-  }>;
-}
-
-type up = { x: 0; y: -1 };
-type down = { x: 0; y: 1 };
-type left = { x: -1; y: 0 };
-type right = { x: 1; y: 0 };

@@ -1,5 +1,6 @@
 import { Store } from '.';
 import { actions } from './actions';
+import { Game } from './games/types';
 import { mutations } from './mutations';
 import { Room } from './rooms/types';
 import { User } from './users/types';
@@ -7,6 +8,7 @@ import { User } from './users/types';
 export interface State {
   rooms: Room[];
   users: User[];
+  games: Game[];
 }
 
 export interface StoreParams {

@@ -1,7 +1,8 @@
 import { Server, Socket } from 'socket.io';
 import { v4 as uuid } from 'uuid';
+import { startGame } from '../../game';
 import { State } from '../types';
-import { Game, Room } from './types';
+import { Room } from './types';
 import { formatRoomsToHome } from './utils/formatRoomsToHome';
 
 interface CreateRoomPayload {
@@ -32,7 +33,7 @@ export const createRoom = (state: State, payload: CreateRoomPayload) => {
     ],
     owner: socket.user.id,
     mapSize: 12,
-    game: null,
+    playing: false,
     slots: [
       socket.user.id,
       'open',
@@ -272,7 +273,7 @@ export const gameReady = (state: State, payload: GameReadyPayload) => {
     if (room !== socket.id) {
       const currentRoom = state.rooms.find((item) => item.id === room);
       if (!currentRoom) continue;
-      if (currentRoom.game) continue;
+      if (currentRoom.playing) continue;
 
       const isOwner = currentRoom.owner === socket.user.id;
 
@@ -289,24 +290,9 @@ export const gameReady = (state: State, payload: GameReadyPayload) => {
           continue;
         }
 
-        /** @TODO Colocar games no state */
-        const newGame: Game = {
-          id: uuid(),
-          roomId: currentRoom.id,
-          fruits: [{ x: 2, y: 2 }],
-          mapSize: currentRoom.mapSize,
-          users: currentRoom.users.map((user) => ({
-            id: user.id,
-            gamePoints: 1,
-            body: [],
-            head: { x: 5, y: 5 },
-            direction: { x: 1, y: 0 },
-          })),
-        };
+        startGame(currentRoom, io);
 
-        currentRoom.game = newGame.id;
-
-        io.to(room).emit('game-started', newGame);
+        currentRoom.playing = true;
         io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
       } else {
         const userToUpdate = currentRoom.users.find(
