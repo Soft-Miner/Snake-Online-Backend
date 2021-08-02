@@ -17,7 +17,6 @@ export const startGame = async (room: Room, io: Server) => {
 class Game {
   private gameOver = false;
   private game: IGame;
-  private allTiles: Record<number, Record<number, boolean>>;
 
   constructor(
     private roomId: string,
@@ -27,17 +26,6 @@ class Game {
   ) {
     this.game = this.initialGame(users);
     store.dispatch({ type: 'newGame', payload: { game: this.game } });
-
-    this.allTiles = {};
-    for (let x = 0; x < this.mapSize; x++) {
-      for (let y = 0; y < this.mapSize; y++) {
-        if (this.allTiles[x]) {
-          this.allTiles[x][y] = true;
-        } else {
-          this.allTiles[x] = { [y]: true };
-        }
-      }
-    }
 
     this.createRandomFruit();
   }
@@ -143,10 +131,9 @@ class Game {
         }
       }
 
-      // Collision with body of another player
+      // Collision with body of some player
       for (let i = 0; i < this.game.users.length; i++) {
         const user = this.game.users[i];
-        if (user.id === player.id) continue;
 
         for (let j = 0; j < user.body.length; j++) {
           const bodyTile = user.body[j];
@@ -170,17 +157,17 @@ class Game {
       }
 
       // Collision with some fruit
-      this.game.fruits.forEach((fruit, index, fruitsList) => {
+      for (let i = this.game.fruits.length - 1; i >= 0; i--) {
+        const fruit = this.game.fruits[i];
         const collisionWithFruit =
           fruit.x === currentNextPosition.position.x &&
           fruit.y === currentNextPosition.position.y;
 
         if (collisionWithFruit) {
-          fruitsList.splice(index, 1);
-
+          this.game.fruits.splice(i, 1);
           playersToIncrement.push(player);
         }
-      });
+      }
     });
 
     playersToIncrement.forEach((playerToIncrement) =>
@@ -195,7 +182,8 @@ class Game {
 
       player.body.splice(0, 0, { x: player.head.x, y: player.head.y });
       player.body.pop();
-      player.head = currentNextPosition.position;
+      player.head.x = currentNextPosition.position.x;
+      player.head.y = currentNextPosition.position.y;
     });
     playersToKill.forEach((playerToKill) => this.kill(playerToKill));
 
@@ -234,7 +222,16 @@ class Game {
   }
 
   private createRandomFruit() {
-    const allTiles = { ...this.allTiles };
+    const allTiles: Record<number, Record<number, boolean>> = {};
+    for (let x = 0; x < this.mapSize; x++) {
+      for (let y = 0; y < this.mapSize; y++) {
+        if (allTiles[x]) {
+          allTiles[x][y] = true;
+        } else {
+          allTiles[x] = { [y]: true };
+        }
+      }
+    }
 
     this.game.users.forEach((user) => {
       user.body.forEach(({ x, y }) => {
@@ -267,7 +264,7 @@ class Game {
       this.update();
 
       if (!this.gameOver) {
-        setTimeout(tick, 300);
+        setTimeout(tick, 150);
       } else {
         console.log('Game Over', this.game.id);
       }
