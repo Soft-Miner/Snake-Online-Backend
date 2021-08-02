@@ -134,6 +134,7 @@ class Game {
       // Collision with body of some player
       for (let i = 0; i < this.game.users.length; i++) {
         const user = this.game.users[i];
+        if (this.dead(user)) continue;
 
         for (let j = 0; j < user.body.length; j++) {
           const bodyTile = user.body[j];
