@@ -1,5 +1,7 @@
 import { Server } from 'socket.io';
+import { getRepository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
+import User from '../../models/User';
 import { randomDirection } from '../../utils/randomDirection';
 import { randomElement } from '../../utils/randomElement';
 import { randomIntBetween } from '../../utils/randomIntBetween';
@@ -82,15 +84,38 @@ class Game {
     this.sendUpdates();
   }
 
-  private updateGameStatus() {
-    let usersAlive = 0;
+  private async updateGameStatus() {
+    const usersAlive: GameUser[] = [];
     this.game.users.forEach((user) => {
       if (!this.dead(user)) {
-        usersAlive++;
+        usersAlive.push(user);
       }
     });
 
-    if (usersAlive === 0) {
+    if (this.game.users.length > 1 && usersAlive.length < 2) {
+      this.gameOver = true;
+      if (usersAlive.length === 1) {
+        const winner = usersAlive[0];
+        winner.gamePoints += this.game.fruits.length;
+      }
+
+      const usersRepository = getRepository(User);
+      const databaseUsers = await usersRepository
+        .createQueryBuilder()
+        .where('id IN(:...ids)', {
+          ids: this.game.users.map((user) => user.id),
+        })
+        .getMany();
+      databaseUsers.forEach((databaseUser) => {
+        const gameUser = this.game.users.find(
+          (user) => user.id === databaseUser.id
+        );
+        if (gameUser) {
+          databaseUser.points += gameUser.gamePoints;
+        }
+      });
+      usersRepository.save(databaseUsers);
+    } else if (this.game.users.length === 1 && usersAlive.length === 0) {
       this.gameOver = true;
     }
   }

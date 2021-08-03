@@ -9,12 +9,16 @@ import store from './store';
 export const configureSocketIo = (server: HttpServer) => {
   const io = new Server(server, {
     cors: {},
+    pingTimeout: 10000,
+    pingInterval: 5000,
   });
 
   io.use(verifyJWT);
 
   io.on('connection', (socket) => {
     store.dispatch({ type: 'enterGame', payload: { socket, io } });
+
+    socket.on('ping', () => socket.emit('pong'));
 
     socket.on('message', chatListeners.message(socket));
     socket.on('create-room', roomsListeners.create(socket));
