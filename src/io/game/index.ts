@@ -161,7 +161,7 @@ class Game {
         const user = this.game.users[i];
         if (this.dead(user)) continue;
 
-        for (let j = 0; j < user.body.length; j++) {
+        for (let j = 0; j < user.body.length - 1; j++) {
           const bodyTile = user.body[j];
 
           const collisionWithBody =
@@ -196,9 +196,10 @@ class Game {
       }
     });
 
-    playersToIncrement.forEach((playerToIncrement) =>
-      playerToIncrement.body.push({ x: 0, y: 0 })
-    );
+    playersToIncrement.forEach((playerToIncrement) => {
+      playerToIncrement.body.push({ x: 0, y: 0 });
+      playerToIncrement.gamePoints++;
+    });
 
     nextPositions.forEach((currentNextPosition) => {
       const player = this.game.users.find(
@@ -283,7 +284,6 @@ class Game {
   }
 
   start() {
-    console.log('New Game Started', this.game.id);
     this.io.to(this.roomId).emit('game-started', this.game);
 
     const tick = () => {
@@ -292,7 +292,19 @@ class Game {
       if (!this.gameOver) {
         setTimeout(tick, 150);
       } else {
-        console.log('Game Over', this.game.id);
+        const currentRoom = store.state.rooms.find(
+          (room) => room.id === this.roomId
+        );
+        if (currentRoom) {
+          currentRoom.playing = false;
+        }
+
+        const gameIndex = store.state.games.findIndex(
+          (game) => game.id === this.game.id
+        );
+        if (gameIndex !== -1) {
+          store.state.games.splice(gameIndex, 1);
+        }
       }
     };
 
