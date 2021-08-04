@@ -19,8 +19,15 @@ export interface GameUser {
     x: number;
     y: number;
   };
-  direction: Direction;
+  lastDirections: Direction[];
 }
+
+export const directions: Record<number, Direction> = {
+  1: { x: 0, y: -1 },
+  2: { x: 1, y: 0 },
+  3: { x: 0, y: 1 },
+  4: { x: -1, y: 0 },
+};
 
 export type Direction = Up | Down | Left | Right;
 

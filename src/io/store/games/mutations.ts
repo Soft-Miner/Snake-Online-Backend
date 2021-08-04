@@ -1,22 +1,20 @@
 import { Socket } from 'socket.io';
 import { State } from '../types';
-import { Direction, Game } from './types';
+import { directions, Game } from './types';
 
 interface ChangeDirectionPayload {
   socket: Socket;
-  direction: Direction;
+  direction: number;
   gameId: string;
 }
 export const changeDirection = (
   state: State,
   payload: ChangeDirectionPayload
 ) => {
-  const { socket, direction, gameId } = payload;
+  const { socket, direction: directionNumber, gameId } = payload;
+  const direction = directions[directionNumber];
 
-  const validDirection =
-    Math.abs(direction.x + direction.y) === 1 &&
-    (direction.x === 0 || direction.y === 0);
-  if (!validDirection) return state;
+  if (!direction) return state;
 
   const game = state.games.find((item) => item.id === gameId);
   if (!game) return state;
@@ -24,15 +22,8 @@ export const changeDirection = (
   const user = game.users.find((item) => item.id === socket.user.id);
   if (!user || user.body.length === 0) return state;
 
-  const snakeDirection = {
-    x: user.head.x - user.body[0].x,
-    y: user.head.y - user.body[0].y,
-  };
-  if (direction.x === -snakeDirection.x && direction.y === -snakeDirection.y)
-    return state;
-
-  user.direction.x = direction.x;
-  user.direction.y = direction.y;
+  user.lastDirections.push(direction);
+  user.lastDirections.splice(0, 1);
 
   return state;
 };

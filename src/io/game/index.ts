@@ -9,6 +9,7 @@ import { shuffle } from '../../utils/shuffle';
 import store from '../store';
 import { Direction, Game as IGame, GameUser } from '../store/games/types';
 import { Room, RoomUser } from '../store/rooms/types';
+import { formatRoomsToHome } from '../store/rooms/utils/formatRoomsToHome';
 import { NextPosition } from './types';
 
 export const startGame = async (room: Room, io: Server) => {
@@ -69,7 +70,7 @@ class Game {
 
         return {
           body: [{ x: bodyX, y: bodyY }],
-          direction,
+          lastDirections: [direction, direction],
           gamePoints: 1,
           head: { x: headX, y: headY },
           id: user.id,
@@ -94,10 +95,14 @@ class Game {
 
     if (this.game.users.length > 1 && usersAlive.length < 2) {
       this.gameOver = true;
-      if (usersAlive.length === 1) {
-        const winner = usersAlive[0];
-        winner.gamePoints += this.game.fruits.length;
-      }
+    } else if (this.game.users.length === 1 && usersAlive.length === 0) {
+      this.gameOver = true;
+    }
+  }
+
+  private async handleGameOver() {
+    if (this.game.users.length > 1) {
+      const winner = this.game.users.find((user) => !this.dead(user));
 
       const usersRepository = getRepository(User);
       const databaseUsers = await usersRepository
@@ -115,8 +120,32 @@ class Game {
         }
       });
       usersRepository.save(databaseUsers);
-    } else if (this.game.users.length === 1 && usersAlive.length === 0) {
-      this.gameOver = true;
+
+      if (winner) {
+        winner.gamePoints += this.game.fruits.length;
+      }
+    }
+
+    const currentRoom = store.state.rooms.find(
+      (room) => room.id === this.roomId
+    );
+    if (currentRoom) {
+      currentRoom.playing = false;
+      currentRoom.users.forEach((user) => {
+        user.ready = false;
+      });
+
+      this.io.to(this.roomId).emit('room-user-changed', currentRoom);
+      this.io
+        .to('home')
+        .emit('rooms-updated', formatRoomsToHome(store.state.rooms));
+    }
+
+    const gameIndex = store.state.games.findIndex(
+      (game) => game.id === this.game.id
+    );
+    if (gameIndex !== -1) {
+      store.state.games.splice(gameIndex, 1);
     }
   }
 
@@ -235,11 +264,34 @@ class Game {
 
     this.game.users.forEach((user) => {
       if (!this.dead(user)) {
+        const snakeDirection = {
+          x: user.head.x - user.body[0].x,
+          y: user.head.y - user.body[0].y,
+        };
+
+        const primaryDirection =
+          user.lastDirections[user.lastDirections.length - 1];
+        const secondaryDirection =
+          user.lastDirections[user.lastDirections.length - 2];
+        if (
+          primaryDirection.x !== -snakeDirection.x ||
+          primaryDirection.y !== -snakeDirection.y
+        ) {
+          snakeDirection.x = primaryDirection.x;
+          snakeDirection.y = primaryDirection.y;
+        } else if (
+          secondaryDirection.x !== -snakeDirection.x ||
+          secondaryDirection.y !== -snakeDirection.y
+        ) {
+          snakeDirection.x = secondaryDirection.x;
+          snakeDirection.y = secondaryDirection.y;
+        }
+
         nextPositions.push({
           userId: user.id,
           position: {
-            x: user.head.x + user.direction.x,
-            y: user.head.y + user.direction.y,
+            x: user.head.x + snakeDirection.x,
+            y: user.head.y + snakeDirection.y,
           },
         });
       }
@@ -292,19 +344,7 @@ class Game {
       if (!this.gameOver) {
         setTimeout(tick, 150);
       } else {
-        const currentRoom = store.state.rooms.find(
-          (room) => room.id === this.roomId
-        );
-        if (currentRoom) {
-          currentRoom.playing = false;
-        }
-
-        const gameIndex = store.state.games.findIndex(
-          (game) => game.id === this.game.id
-        );
-        if (gameIndex !== -1) {
-          store.state.games.splice(gameIndex, 1);
-        }
+        this.handleGameOver();
       }
     };
 

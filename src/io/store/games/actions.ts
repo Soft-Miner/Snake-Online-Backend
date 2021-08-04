@@ -1,10 +1,10 @@
 import { Socket } from 'socket.io';
 import { Store } from '..';
-import { Direction, Game } from './types';
+import { Game } from './types';
 
 interface ChangeDirectionPayload {
   socket: Socket;
-  direction: Direction;
+  direction: number;
   gameId: string;
 }
 export const changeDirection = (
