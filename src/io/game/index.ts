@@ -103,6 +103,9 @@ class Game {
   private async handleGameOver() {
     if (this.game.users.length > 1) {
       const winner = this.game.users.find((user) => !this.dead(user));
+      if (winner) {
+        winner.gamePoints += this.game.fruits.length;
+      }
 
       const usersRepository = getRepository(User);
       const databaseUsers = await usersRepository
@@ -120,10 +123,6 @@ class Game {
         }
       });
       usersRepository.save(databaseUsers);
-
-      if (winner) {
-        winner.gamePoints += this.game.fruits.length;
-      }
     }
 
     const currentRoom = store.state.rooms.find(
@@ -330,9 +329,11 @@ class Game {
       });
     });
 
-    const fruit = randomElement(availableTiles);
+    if (availableTiles.length > 0) {
+      const fruit = randomElement(availableTiles);
 
-    this.game.fruits.push(fruit);
+      this.game.fruits.push(fruit);
+    }
   }
 
   start() {
