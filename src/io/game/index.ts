@@ -1,13 +1,12 @@
 import { Server } from 'socket.io';
-import { getRepository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
-import User from '../../models/User';
 import { randomDirection } from '../../utils/randomDirection';
 import { randomElement } from '../../utils/randomElement';
 import { randomIntBetween } from '../../utils/randomIntBetween';
 import { shuffle } from '../../utils/shuffle';
 import store from '../store';
 import { Direction, Game as IGame, GameUser } from '../store/games/types';
+import { givePoints } from '../store/games/utils/givePoints';
 import { Room, RoomUser } from '../store/rooms/types';
 import { formatRoomsToHome } from '../store/rooms/utils/formatRoomsToHome';
 import { NextPosition } from './types';
@@ -105,24 +104,8 @@ class Game {
       const winner = this.game.users.find((user) => !this.dead(user));
       if (winner) {
         winner.gamePoints += this.game.fruits.length;
+        givePoints(winner.id, winner.gamePoints);
       }
-
-      const usersRepository = getRepository(User);
-      const databaseUsers = await usersRepository
-        .createQueryBuilder()
-        .where('id IN(:...ids)', {
-          ids: this.game.users.map((user) => user.id),
-        })
-        .getMany();
-      databaseUsers.forEach((databaseUser) => {
-        const gameUser = this.game.users.find(
-          (user) => user.id === databaseUser.id
-        );
-        if (gameUser) {
-          databaseUser.points += gameUser.gamePoints;
-        }
-      });
-      usersRepository.save(databaseUsers);
     }
 
     const currentRoom = store.state.rooms.find(
@@ -252,6 +235,10 @@ class Game {
       this.game.fruits.push({ x: bodyTile.x, y: bodyTile.y });
     });
     player.body = [];
+
+    if (this.game.users.length > 1) {
+      givePoints(player.id, player.gamePoints);
+    }
   }
 
   private dead(player: GameUser) {

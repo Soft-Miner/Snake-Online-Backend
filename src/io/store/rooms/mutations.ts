@@ -2,6 +2,7 @@ import { Server, Socket } from 'socket.io';
 import { v4 as uuid } from 'uuid';
 import { startGame } from '../../game';
 import { State } from '../types';
+import { socketJoinHome } from '../utils/socketJoinHome';
 import { Room } from './types';
 import { formatRoomsToHome } from './utils/formatRoomsToHome';
 
@@ -157,7 +158,7 @@ export const leaveRoom = (state: State, payload: LeaveRoomPayload) => {
     }
   }
 
-  socket.join('home');
+  socketJoinHome(socket);
   io.to('home').emit('rooms-updated', formatRoomsToHome(state.rooms));
 
   return state;
@@ -195,7 +196,7 @@ export const kickPlayer = (state: State, payload: KickPlayerPayload) => {
 
       if (kickedUser) {
         io.to(kickedUser.socket.id).emit('left-room');
-        kickedUser.socket.join('home');
+        socketJoinHome(kickedUser.socket);
       }
 
       io.to(currentRoom.id).emit('user-left-room', currentRoom);

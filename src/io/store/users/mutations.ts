@@ -1,6 +1,7 @@
 import { Server, Socket } from 'socket.io';
 import { formatRoomsToHome } from '../rooms/utils/formatRoomsToHome';
 import { State } from '../types';
+import { socketJoinHome } from '../utils/socketJoinHome';
 
 interface LeaveGamePayload {
   socket: Socket;
@@ -31,7 +32,7 @@ export const enterGame = (state: State, payload: EnterGamePayload) => {
   const { socket, io } = payload;
 
   console.log(`User connected: ${socket.user.nickname}`);
-  socket.join('home');
+  socketJoinHome(socket);
 
   state.users.push(socket.user);
 
