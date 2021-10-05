@@ -4,13 +4,16 @@ import { Server } from 'colyseus';
 import cors from 'cors';
 import express from 'express';
 import 'express-async-errors';
-import { createServer } from 'http';
 import 'reflect-metadata';
 import swaggerUi from 'swagger-ui-express';
 import { configureColyseus } from './colyseus';
 import { appError } from './middlewares/appError';
 import routes from './routes';
 import swaggerDocs from './swagger.json';
+
+const createServer = (
+  process.env.NODE_ENV === 'development' ? require('http') : require('https')
+).createServer;
 
 const app = express();
 
