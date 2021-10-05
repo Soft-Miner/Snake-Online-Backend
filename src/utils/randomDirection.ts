@@ -1,8 +1,7 @@
-import { Direction } from '../io/store/games/types';
 import { randomIntBetween } from './randomIntBetween';
 
 export const randomDirection = () => {
-  const directions: Direction[] = [
+  const directions = [
     {
       x: 0,
       y: -1,

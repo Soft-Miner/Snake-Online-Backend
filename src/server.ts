@@ -9,8 +9,8 @@ import app from './app';
 
 createConnection();
 
-const PORT = process.env.PORT || 3333;
+const PORT = Number(process.env.PORT) || 3333;
 
-app.listen(PORT, () => {
+app.listen(PORT, undefined, undefined, () => {
   console.log(`⚡️ Listening at http://localhost:${PORT}`);
 });

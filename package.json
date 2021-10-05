@@ -16,7 +16,9 @@
     "prettier:check": "prettier --check src"
   },
   "dependencies": {
+    "@colyseus/monitor": "^0.14.22",
     "bcrypt": "^5.0.1",
+    "colyseus": "^0.14.23",
     "cors": "^2.8.5",
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
