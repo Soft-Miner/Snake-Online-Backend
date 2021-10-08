@@ -11,3 +11,5 @@ src/database/database.local.sqlite
 .env
 .env.development
 .env.production
+
+yarn-error.log

@@ -4,16 +4,6 @@
     "version": "1.0.0",
     "title": "Snake Online"
   },
-  "servers": [
-    {
-      "url": "http://localhost:3333",
-      "description": "Local"
-    },
-    {
-      "url": "https://snake-online-dev.herokuapp.com",
-      "description": "Dev"
-    }
-  ],
   "paths": {
     "/api/register": {
       "post": {
