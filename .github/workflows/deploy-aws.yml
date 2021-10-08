@@ -2,6 +2,7 @@ name: Deploy on AWS Elastic Beanstalk
 
 env:
   APP_NAME: snake
+  APP_ENV_NAME: Snake-env
   S3_BUCKET: snake-backend
   AWS_REGION: sa-east-1
   AWS_PLATFORM: Docker
@@ -47,6 +48,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
+          mask-aws-account-id: ${{ secrets.AWS_ID }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: ${{ env.AWS_REGION }}
@@ -60,5 +62,5 @@ jobs:
 
           echo "Deploy init"
           eb init -i ${{env.APP_NAME}} -p ${{env.AWS_PLATFORM}} -k ${{secrets.AWS_ID}} --region ${{env.AWS_REGION}}
-          eb deploy ${{env.APP_NAME}} --version ${AWS_VERSION_LABEL}
+          eb deploy ${{env.APP_ENV_NAME}} --version ${AWS_VERSION_LABEL}
           echo "Deploy finished"
