@@ -25,7 +25,7 @@ class AuthenticateService {
       },
       process.env.JWT_SECRET as string,
       {
-        expiresIn: 60 * 5, // 5 minutes
+        expiresIn: '5m',
       }
     );
   }
@@ -39,7 +39,7 @@ class AuthenticateService {
       },
       process.env.JWT_SECRET as string,
       {
-        expiresIn: 60 * 30, // 30 minutes
+        expiresIn: '30 days',
       }
     );
   }

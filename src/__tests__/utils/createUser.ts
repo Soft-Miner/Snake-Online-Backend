@@ -8,6 +8,7 @@ const createUser = async (connection: Connection, user?: User) => {
     nickname: user?.nickname || 'nickname',
     email: user?.email || 'email@example.com',
     password: user?.password || '123',
+    points: user?.points || 0,
   });
   const userSaved = await usersRepository.save(newUser);
 

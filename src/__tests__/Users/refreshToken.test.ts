@@ -1,7 +1,7 @@
-import app from '../../app';
 import { Server } from 'http';
 import request, { SuperAgentTest } from 'supertest';
 import { createConnection, getRepository } from 'typeorm';
+import app from '../../app';
 import User from '../../models/User';
 import createUser from '../utils/createUser';
 

@@ -35,6 +35,7 @@ class AuthenticateController {
           id: user.id,
           nickname: user.nickname,
           email: user.email,
+          points: user.points,
         },
       });
     } catch (error) {
@@ -48,16 +49,6 @@ class AuthenticateController {
     _next: NextFunction
   ) {
     const { refresh_token } = request.body;
-
-    const schema = yup.object().shape({
-      refresh_token: yup.string().required(),
-    });
-
-    try {
-      await schema.validate(request.body);
-    } catch (error) {
-      return _next(new AppError('Invalid refresh_token.'));
-    }
 
     try {
       const { access_token, refresh_token: new_refresh_token } =

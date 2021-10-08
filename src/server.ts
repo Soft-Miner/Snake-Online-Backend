@@ -5,12 +5,15 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 import { createConnection } from 'typeorm';
+import app from './app';
+import { configureColyseus } from './colyseus';
+
 createConnection();
 
-import app from './app';
+const PORT = Number(process.env.PORT) || 3333;
 
-const PORT = process.env.PORT || 3333;
+const gameServer = configureColyseus(app);
 
-app.listen(PORT, () => {
+gameServer.listen(PORT, undefined, undefined, () => {
   console.log(`⚡️ Listening at http://localhost:${PORT}`);
 });
