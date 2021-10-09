@@ -2,7 +2,7 @@ name: Deploy on AWS Elastic Beanstalk
 
 env:
   APP_NAME: snake
-  APP_ENV_NAME: Snake-env-1
+  APP_ENV_NAME: Snake-env
   AWS_REGION: sa-east-1
   AWS_PLATFORM: Docker
   PIPELINE_ID: ${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}
