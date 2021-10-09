@@ -2,8 +2,7 @@ name: Deploy on AWS Elastic Beanstalk
 
 env:
   APP_NAME: snake
-  APP_ENV_NAME: Snake-env
-  S3_BUCKET: snake-backend
+  APP_ENV_NAME: Snake-env-1
   AWS_REGION: sa-east-1
   AWS_PLATFORM: Docker
   PIPELINE_ID: ${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}
@@ -12,39 +11,30 @@ on:
   push:
     branches: [master]
 
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
 jobs:
-  create_eb_version:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-      - run: |
-          AWS_VERSION_LABEL=${{env.APP_NAME}}-${{env.PIPELINE_ID}}
-
-          echo "Creating Source Bundle"
-          zip -r ${{env.APP_NAME}}.zip *
-          S3_KEY="$AWS_VERSION_LABEL.zip"
-
-          echo "Uploading Source Bundle to S3"
-          aws s3 cp ${{env.APP_NAME}}.zip s3://${{env.S3_BUCKET}}/${S3_KEY} --region ${{env.AWS_REGION}}
-
-          echo "Creating Elastic Beanstalk version"
-          aws elasticbeanstalk create-application-version --application-name ${{env.APP_NAME}} --version-label $AWS_VERSION_LABEL --region ${{env.AWS_REGION}} --source-bundle S3Bucket=${{env.S3_BUCKET}},S3Key=${S3_KEY} --auto-create-application
-
   deploy_aws:
-    needs: [create_eb_version]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - name: Set up Python 3.6 (needed for eb cli)
+
+      - name: Set up Python 3.6
         uses: actions/setup-python@v1
         with:
           python-version: '3.6'
+
+      - name: Create Env File
+        id: write_file
+        uses: timheuer/base64-to-file@v1
+        with:
+          fileName: '.env'
+          encodedString: ${{ secrets.ENV_FILE }}
+
+      - name: Copy Env File from Temporary Path
+        run: cp ${{ steps.write_file.outputs.filePath }} ./.env
+
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
