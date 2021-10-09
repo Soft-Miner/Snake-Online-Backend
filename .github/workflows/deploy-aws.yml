@@ -4,6 +4,7 @@ env:
   APP_NAME: snake
   APP_ENV_NAME: Snake-env
   AWS_REGION: sa-east-1
+  S3_BUCKET: snake-backend
   AWS_PLATFORM: Docker
   PIPELINE_ID: ${GITHUB_RUN_ID}-${GITHUB_RUN_NUMBER}
 
@@ -48,16 +49,6 @@ jobs:
         uses: actions/setup-python@v1
         with:
           python-version: '3.6'
-
-      - name: Create Env File
-        id: write_file
-        uses: timheuer/base64-to-file@v1
-        with:
-          fileName: '.env'
-          encodedString: ${{ secrets.ENV_FILE }}
-
-      - name: Copy Env File from Temporary Path
-        run: cp ${{ steps.write_file.outputs.filePath }} ./.env
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
